@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "RSPACK_CONFIG_VALIDATE=loose-silent node scripts/build.js",
     "build-test-binary": "cd test/binary && node-gyp rebuild && cp build/Release/hello.node ../integration/hello.node",
     "test": "node --expose-gc --max_old_space_size=4096 node_modules/jest/bin/jest.js",
     "test-coverage": "node --expose-gc --max_old_space_size=4096 node_modules/jest/bin/jest.js --coverage --globals \"{\\\"coverage\\\":true}\"",
@@ -74,6 +74,7 @@
     "mysql": "^2.16.0",
     "node-gyp": "^9.4.0",
     "npm": "^6.13.4",
+    "node-loader": "2.0.0",
     "oracledb": "^6.1.0",
     "passport": "^0.6.0",
     "passport-google-oauth": "^2.0.0",
@@ -106,7 +107,7 @@
     "vue": "^2.5.17",
     "vue-server-renderer": "^2.5.17",
     "web-vitals": "^0.2.4",
-    "webpack": "5.76.0",
+    "webpack": "npm:@rspack/core@0.3.7",
     "when": "^3.7.8"
   }
 }

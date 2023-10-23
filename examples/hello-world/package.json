@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "ncc run index.js",
-    "build": "ncc build index.js -o dist"
+    "build": "RSPACK_CONFIG_VALIDATE=loose-silent ncc build index.js -o dist"
   },
   "dependencies": {
     "chalk": "^2.4.1"
