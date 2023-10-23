@@ -2,12 +2,12 @@ const resolve = require("resolve");
 const fs = require("graceful-fs");
 const crypto = require("crypto");
 const { join, dirname, extname, resolve: pathResolve } = require("path");
-const webpack = require("webpack");
+const webpack = require("webpack").rspack;
 const MemoryFS = require("memory-fs");
 const terser = require("terser");
 const tsconfigPaths = require("tsconfig-paths");
 const { loadTsconfig } = require("tsconfig-paths/lib/tsconfig-loader");
-const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
+// const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const shebangRegEx = require('./utils/shebang');
 const nccCacheDir = require("./utils/ncc-cache-dir");
 const LicenseWebpackPlugin = require('license-webpack-plugin').LicenseWebpackPlugin;
@@ -127,7 +127,7 @@ function ncc (
     if (fullTsconfig.compilerOptions.allowJs) {
       tsconfigPathsOptions.extensions = SUPPORTED_EXTENSIONS
     }
-    resolvePlugins.push(new TsconfigPathsPlugin(tsconfigPathsOptions));
+    //resolvePlugins.push(new TsconfigPathsPlugin(tsconfigPathsOptions));
 
     const tsconfig = tsconfigPaths.loadConfig();
     if (tsconfig.resultType === "success") {
@@ -232,13 +232,6 @@ function ncc (
               }
             });
           }
-          NormalModuleFactory.hooks.parser
-            .for("javascript/auto")
-            .tap("ncc", handler);
-          NormalModuleFactory.hooks.parser
-            .for("javascript/dynamic")
-            .tap("ncc", handler);
-
           return NormalModuleFactory;
         });
       }
@@ -251,19 +244,8 @@ function ncc (
       outputFilename: license
     }));
   }
-
-  const compiler = webpack({
+ const compiler = webpack({
     entry,
-    cache: cache === false ? undefined : {
-      type: "filesystem",
-      cacheDirectory: typeof cache === 'string' ? cache : nccCacheDir,
-      name: `ncc_${hashOf(entry)}`,
-      version: nccVersion
-    },
-    snapshot: {
-      managedPaths: [],
-      module: { hash: true }
-    },
     amd: false,
     experiments: {
       topLevelAwait: true,
@@ -307,16 +289,13 @@ function ncc (
         url: { preferRelative: true },
         worker: { ...esmDeps(), preferRelative: true },
         commonjs: cjsDeps(),
-        amd: cjsDeps(),
         // for backward-compat: loadModule
-        loader: cjsDeps(),
         // for backward-compat: Custom Dependency
         unknown: cjsDeps(),
-        // for backward-compat: getResolve without dependencyType
-        undefined: cjsDeps()
+        
       },
       mainFields,
-      plugins: resolvePlugins
+      //plugins: resolvePlugins
     },
     // https://github.com/vercel/ncc/pull/29#pullrequestreview-177152175
     node: false,
@@ -334,19 +313,15 @@ function ncc (
           }]
         },
         {
+          test: /\.node$/,
+          use: [{
+            loader: 'node-loader'
+          }]
+        },
+        {
           test: /\.(js|mjs|tsx?|node)$/,
           use: [{
             loader: eval('__dirname + "/loaders/empty-loader.js"')
-          }, {
-            loader: eval('__dirname + "/loaders/relocate-loader.js"'),
-            options: {
-              customEmit,
-              filterAssetBase,
-              existingAssetNames,
-              escapeNonAnalyzableRequires: true,
-              wrapperCompatibility: true,
-              debugLog
-            }
           }]
         },
         {
@@ -382,7 +357,7 @@ function ncc (
         javascript: { importMeta: false },
       },
     },
-    plugins
+   // plugins
   });
   compiler.outputFileSystem = mfs;
   if (!watch) {
@@ -456,14 +431,14 @@ function ncc (
 
   async function finalizeHandler (stats) {
     const assets = Object.create(null);
-    getFlatFiles(mfs.data, assets, relocateLoader.getAssetMeta, fullTsconfig);
-    // filter symlinks to existing assets
+    // getFlatFiles(mfs.data, assets, relocateLoader.getAssetMeta, fullTsconfig);
+    // // filter symlinks to existing assets
     const symlinks = Object.create(null);
-    for (const [key, value] of Object.entries(relocateLoader.getSymlinks())) {
-      const resolved = join(dirname(key), value);
-      if (resolved in assets)
-        symlinks[key] = value;
-    }
+    // for (const [key, value] of Object.entries(relocateLoader.getSymlinks())) {
+    //   const resolved = join(dirname(key), value);
+    //   if (resolved in assets)
+    //     symlinks[key] = value;
+    // }
 
     // Webpack only emits sourcemaps for .js files
     // so we need to adjust the .cjs extension handling
